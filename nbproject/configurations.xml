@@ -2,6 +2,9 @@
 <configurationDescriptor version="100">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <df root="." name="0">
+      <df name="resources">
+        <in>gresources.c</in>
+      </df>
       <in>database.c</in>
       <in>datatypes.c</in>
       <in>main.c</in>
@@ -41,9 +44,6 @@
           <buildCommand>${MAKE} -f Makefile</buildCommand>
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
           <executablePath>osm2gadm</executablePath>
-          <cTool>
-            <standard>3</standard>
-          </cTool>
         </makeTool>
         <preBuild>
           <preBuildCommandWorkingDir>.</preBuildCommandWorkingDir>
@@ -51,31 +51,41 @@
         </preBuild>
       </makefileType>
       <item path="database.c" ex="false" tool="0" flavor2="3">
-        <cTool flags="1">
+        <cTool flags="0">
           <incDir>
-            <pElem>/usr/include/glib-2.0/glib</pElem>
-            <pElem>/usr/include/postgresql</pElem>
-            <pElem>.</pElem>
             <pElem>/usr/include/glib-2.0</pElem>
+            <pElem>/usr/lib/x86_64-linux-gnu/glib-2.0/include</pElem>
+            <pElem>/usr/include/postgresql</pElem>
           </incDir>
         </cTool>
       </item>
       <item path="datatypes.c" ex="false" tool="0" flavor2="3">
-        <cTool flags="1">
+        <cTool flags="0">
           <incDir>
-            <pElem>/usr/include/glib-2.0/glib</pElem>
-            <pElem>.</pElem>
             <pElem>/usr/include/glib-2.0</pElem>
+            <pElem>/usr/lib/x86_64-linux-gnu/glib-2.0/include</pElem>
+            <pElem>/usr/include/postgresql</pElem>
           </incDir>
         </cTool>
       </item>
-      <item path="main.c" ex="false" tool="0" flavor2="3">
-        <cTool flags="1">
+      <folder path="0/resources">
+        <cTool>
           <incDir>
-            <pElem>/usr/include/postgresql</pElem>
+            <pElem>resources</pElem>
+            <pElem>/usr/lib/x86_64-linux-gnu/glib-2.0/include</pElem>
             <pElem>/usr/include/glib-2.0/glib</pElem>
-            <pElem>.</pElem>
+            <pElem>/usr/include/glib-2.0/gio</pElem>
             <pElem>/usr/include/glib-2.0</pElem>
+            <pElem>.</pElem>
+          </incDir>
+        </cTool>
+      </folder>
+      <item path="main.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
+          <incDir>
+            <pElem>/usr/include/glib-2.0</pElem>
+            <pElem>/usr/lib/x86_64-linux-gnu/glib-2.0/include</pElem>
+            <pElem>/usr/include/postgresql</pElem>
           </incDir>
         </cTool>
       </item>
@@ -88,10 +98,16 @@
           </incDir>
         </cTool>
       </item>
-      <item path="utils.c" ex="false" tool="0" flavor2="3">
+      <item path="resources/gresources.c" ex="false" tool="0" flavor2="3">
         <cTool flags="1">
+        </cTool>
+      </item>
+      <item path="utils.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="0">
           <incDir>
-            <pElem>.</pElem>
+            <pElem>/usr/include/glib-2.0</pElem>
+            <pElem>/usr/lib/x86_64-linux-gnu/glib-2.0/include</pElem>
+            <pElem>/usr/include/postgresql</pElem>
           </incDir>
         </cTool>
       </item>

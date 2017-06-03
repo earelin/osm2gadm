@@ -1,1 +1,17 @@
-make: *** No targets. Stop.
+gcc -c -g -Wall -O0 --pedantic --std=c99 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/postgresql main.c -lglib-2.0 -lpq -lgeos_c
+main.c: In function ‘process_boundaries’:
+main.c:89:22: warning: ordered comparison of pointer with integer zero [-Wpedantic]
+   if (inner_polygons > 0)
+                      ^
+gcc -c -g -Wall -O0 --pedantic --std=c99 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/postgresql database.c -lglib-2.0 -lpq -lgeos_c
+gcc -c -g -Wall -O0 --pedantic --std=c99 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/postgresql process.c -lglib-2.0 -lpq -lgeos_c
+process.c: In function ‘process_merge_polygons’:
+process.c:113:25: warning: comparison between pointer and integer
+       for (int j = 0; j < outer_polygons; j++) 
+                         ^
+process.c:112:21: warning: unused variable ‘inner_polygon’ [-Wunused-variable]
+       GEOSGeometry *inner_polygon = g_ptr_array_index (inner_polygons, i);
+                     ^
+gcc -c -g -Wall -O0 --pedantic --std=c99 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/postgresql datatypes.c -lglib-2.0 -lpq -lgeos_c
+gcc -c -g -Wall -O0 --pedantic --std=c99 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/postgresql utils.c -lglib-2.0 -lpq -lgeos_c
+gcc -g -Wall -O0 --pedantic --std=c99 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/postgresql -o osm2gadm main.o database.o process.o datatypes.o utils.o -lglib-2.0 -lpq -lgeos_c

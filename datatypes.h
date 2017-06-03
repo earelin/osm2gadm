@@ -11,20 +11,21 @@
 #include <glib.h>
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-typedef struct _country_type {
-  int id;
-  char *name;
-  char *iso2;
-} country_type;
+  typedef struct _country_type
+  {
+    int id;
+    char *name;
+    char *iso2;
+  } country_type;
 
-void country_type_array_free (GArray *countries);
+  void country_type_array_free (GArray * countries);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* DATATYPES_H */
-
+#endif				/* DATATYPES_H */

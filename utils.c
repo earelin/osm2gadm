@@ -3,28 +3,30 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <glib.h>
+#include <geos_c.h>
 
-void utils_copy_file (const char *original, const char *copy)
+GPtrArray *
+utils_geom_array_clone (GPtrArray * geoms)
 {
-  char *line = NULL;
-  size_t len = 0;
-  ssize_t nread;
-  
-  FILE *original_file = fopen (original, "r");  
-  FILE *copy_file = fopen (copy, "w+");
-  
-  while ((nread = getline (&line, &len, original_file)) != -1) {    
-    fwrite (line, nread, 1, copy_file);
-  }
-  
-  g_free(line);
-  fclose (copy_file);
-  fclose (original_file);   
+  GPtrArray *copy = g_ptr_array_new ();
+  for (int i = 0; i < geoms->len; i++)
+    {
+      GEOSGeometry *geom = GEOSGeom_clone (g_ptr_array_index (geoms, i));
+      g_ptr_array_add (copy, geom);
+    }
+  return copy;
 }
 
-void utils_file_append_line (const char *filename, const char *line)
+void
+utils_geom_array_free (GPtrArray * geoms)
 {
-  FILE *file = fopen (filename, "a");
-  fwrite (line, strlen(line), 1, file);
-  fclose(file);
+  for (int i = 0; i < geoms->len; i++)
+    {
+      GEOSGeometry *geom = g_ptr_array_index (geoms, i);
+      if (geom != NULL)
+	{
+	  GEOSGeom_destroy (geom);
+	}
+    }
+  g_ptr_array_free (geoms, TRUE);
 }

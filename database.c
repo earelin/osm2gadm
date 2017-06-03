@@ -1,5 +1,6 @@
 #include "database.h"
 #include "datatypes.h"
+#include "process.h"
 #include <stdlib.h>
 #include <glib.h>
 #include <libpq-fe.h>
@@ -33,6 +34,29 @@ database_get_relations (void)
 }
 
 GPtrArray *
+database_get_water_polygons (GEOSGeometry * polygon)
+{
+  char *wkt_geom = GEOSGeomToWKT (polygon);
+  char *sql =
+    g_strdup_printf (GADM_DB_LOAD_WATER_POLYGONS_1, wkt_geom);
+  PGresult *result = PQexec (dbconn, sql);
+  int result_count = PQntuples (result);
+
+  GPtrArray *water_polygons = g_ptr_array_sized_new (result_count);
+
+  for (int row = 0; row < result_count; row++)
+    {      
+      GEOSGeometry *geom = GEOSGeomFromWKT (PQgetvalue (result, row, 0));
+      g_ptr_array_add (water_polygons, geom);
+    }
+
+  PQclear (result);
+  free (sql);
+
+  return water_polygons;
+}
+
+GPtrArray *
 database_get_admin_lines (const int relation_id, const char *type)
 {
   char *sql = g_strdup_printf (GADM_DB_LOAD_ADMIN_LINES, relation_id, type);
@@ -59,15 +83,8 @@ database_save_country_polygons (country_type country, GPtrArray * polygons)
     {
       GEOSGeometry *polygon = g_ptr_array_index (polygons, i);
       GEOSSetSRID (polygon, GADM_WGS_84_SRID);
-      GEOSGeometry *envelope = GEOSEnvelope (polygon);
-      GEOSCoordSequence *envelope_seq =
-	GEOSGeom_getCoordSeq (GEOSGetExteriorRing (envelope));
-
       double max_x, min_x, max_y, min_y;
-      GEOSCoordSeq_getX (envelope_seq, 0, &min_x);
-      GEOSCoordSeq_getY (envelope_seq, 0, &min_y);
-      GEOSCoordSeq_getY (envelope_seq, 1, &max_y);
-      GEOSCoordSeq_getX (envelope_seq, 2, &max_x);
+      process_polygon_get_bounds (polygon, &max_x, &min_x, &max_y, &min_y);
 
       char *wkt_geom = GEOSGeomToWKT (polygon);
       char *sql =
@@ -81,7 +98,7 @@ database_save_country_polygons (country_type country, GPtrArray * polygons)
 }
 
 void
-database_create_tables (void)
+database_tables_create (void)
 {
   gsize size = 0;
   GBytes *data =
@@ -90,4 +107,13 @@ database_create_tables (void)
   PGresult *result = PQexec (dbconn, sql);
   PQclear (result);
   free (sql);
+}
+
+void
+database_tables_truncate (void)
+{
+  char *sql = "TRUNCATE TABLE osm2gadm_polygons;"
+    "TRUNCATE TABLE osm2gadm_lines;";
+  PGresult *result = PQexec (dbconn, sql);
+  PQclear (result);
 }

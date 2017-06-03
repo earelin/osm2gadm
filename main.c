@@ -45,7 +45,8 @@ main (int argc, char **argv)
   // Relations procesing loop.
   GArray *relations = database_get_relations ();
 
-  //database_create_tables();
+  //database_create_tables ();
+  database_tables_truncate ();
 
   for (int i = 0; i < relations->len; i++)
     {				//relations->len; i++) {
@@ -73,33 +74,33 @@ process_boundaries (country_type country)
 
   printf ("\tOuter lines\n");
   outer_lines = database_get_admin_lines (country.id, "outer");
-  printf ("\t\tLines: %d\n", outer_lines->len);
+  printf ("\t\tLines: %u\n", outer_lines->len);
   outer_lines = process_lines_merge (outer_lines);
   outer_lines = process_lines_validation (outer_lines);
-  printf ("\t\tLines merged: %d\n", outer_lines->len);
+  printf ("\t\tLines merged: %u\n", outer_lines->len);
   outer_polygons = process_polygons_generate (outer_lines);
-  outer_polygons = process_polygon_validation (outer_polygons);
-  printf ("\t\tPolygons generated: %d\n", outer_polygons->len);
+  outer_polygons = process_polygons_validation (outer_polygons);
+  printf ("\t\tPolygons generated: %u\n", outer_polygons->len);
 
   printf ("\tInner lines\n");
   inner_lines = database_get_admin_lines (country.id, "inner");
-  printf ("\t\tLines: %d\n", inner_lines->len);
+  printf ("\t\tLines: %u\n", inner_lines->len);
   inner_lines = process_lines_merge (inner_lines);
-  printf ("\t\tLines merged: %d\n", inner_lines->len);
+  printf ("\t\tLines merged: %u\n", inner_lines->len);
   inner_lines = process_lines_validation (inner_lines);
   inner_polygons = process_polygons_generate (inner_lines);
-  printf ("\t\tPolygons generated: %d\n", inner_polygons->len);
+  inner_polygons = process_polygons_validation (inner_polygons);
+  printf ("\t\tPolygons generated: %u\n", inner_polygons->len);
 
   polygons = process_polygons_merge (outer_polygons, inner_polygons);
+  utils_geom_array_free (inner_polygons);
   polygons = process_polygons_cut_coastile (polygons);
 
-  utils_geom_array_free (inner_polygons);
-
   database_save_country_polygons (country, polygons);
-  printf ("\tPolygons written: %d\n", polygons->len);
+  printf ("\tPolygons written: %u\n", polygons->len);
 
-  utils_geom_array_free (outer_polygons);
-  //utils_geom_array_free (polygons);
+  //utils_geom_array_free (outer_polygons);
+  utils_geom_array_free (polygons);
 }
 
 void

@@ -1,5 +1,6 @@
 #include "process.h"
 #include "utils.h"
+#include "database.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -97,7 +98,7 @@ process_lines_validation (GPtrArray * lines)
 }
 
 GPtrArray *
-process_polygon_validation (GPtrArray * polygons)
+process_polygons_validation (GPtrArray * polygons)
 {
   GPtrArray *processed = g_ptr_array_sized_new (polygons->len);
   for (int i = 0; i < polygons->len; i++)
@@ -111,7 +112,8 @@ process_polygon_validation (GPtrArray * polygons)
 	}
       else
 	{
-	  if (geom_type == GEOS_GEOMETRYCOLLECTION)
+	  if (geom_type == GEOS_GEOMETRYCOLLECTION
+	      || geom_type == GEOS_MULTIPOLYGON)
 	    {
 	      int collection_size = GEOSGetNumGeometries (polygon);
 	      GPtrArray *collection_polygons =
@@ -124,7 +126,7 @@ process_polygon_validation (GPtrArray * polygons)
 		}
 
 	      collection_polygons =
-		process_polygon_validation (collection_polygons);
+		process_polygons_validation (collection_polygons);
 
 	      for (int j = 0; j < collection_polygons->len; j++)
 		{
@@ -143,7 +145,7 @@ process_polygon_validation (GPtrArray * polygons)
 	}
     }
 
-  g_ptr_array_free (polygons, FALSE);
+  g_ptr_array_free (polygons, TRUE);
 
   return processed;
 }
@@ -184,6 +186,21 @@ process_polygons_merge (GPtrArray * outer_polygons,
     }
 
   return polygons;
+}
+
+void
+process_polygon_get_bounds (GEOSGeometry * polygon, int *max_x, int *min_x,
+			    int *max_y, int *min_y)
+{
+  GEOSSetSRID (polygon, GADM_WGS_84_SRID);
+  GEOSGeometry *envelope = GEOSEnvelope (polygon);
+  GEOSCoordSequence *envelope_seq =
+    GEOSGeom_getCoordSeq (GEOSGetExteriorRing (envelope));
+
+  GEOSCoordSeq_getX (envelope_seq, 0, min_x);
+  GEOSCoordSeq_getY (envelope_seq, 0, min_y);
+  GEOSCoordSeq_getY (envelope_seq, 1, max_y);
+  GEOSCoordSeq_getX (envelope_seq, 2, max_x);
 }
 
 GEOSGeometry *
@@ -237,5 +254,28 @@ process_line_close (GEOSGeometry * line)
 GPtrArray *
 process_polygons_cut_coastile (GPtrArray * polygons)
 {
-  return polygons;
+  GPtrArray *cutted_polygons = g_ptr_array_sized_new (polygons->len);
+
+  for (int i = 0; i < polygons->len; i++)
+    {
+      GEOSGeometry *polygon = g_ptr_array_index (polygons, i);
+      GEOSSetSRID (polygon, GADM_WGS_84_SRID);
+      GPtrArray *water_polygons = database_get_water_polygons (polygon);
+      //water_polygons = process_polygons_validation (water_polygons);
+
+      for (int j = 0; j < water_polygons->len; j++)
+	{
+	  GEOSGeometry *water_polygon = g_ptr_array_index (water_polygons, j);
+	  GEOSGeometry *tmp = GEOSDifference (polygon, water_polygon);
+	  GEOSGeom_destroy (polygon);
+	  polygon = tmp;
+	}
+
+      g_ptr_array_add (cutted_polygons, polygon);
+    }
+
+  g_ptr_array_free (polygons, TRUE);
+  cutted_polygons = process_polygons_validation (cutted_polygons);
+
+  return cutted_polygons;
 }

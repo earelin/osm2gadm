@@ -18,8 +18,7 @@ extern "C"
   typedef struct _country_type
   {
     int id;
-    char *name;
-    char *iso2;
+    char *name, *iso2;
   } country_type;
 
   void country_type_array_free (GArray * countries);

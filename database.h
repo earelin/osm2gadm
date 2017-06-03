@@ -10,6 +10,7 @@
 
 #include "datatypes.h"
 #include <glib.h>
+#include <geos_c.h>
 
 #define GADM_DB_TRUNCATE "TRUNCATE osm2gadm_polygons"
 
@@ -26,10 +27,19 @@
 	"WHERE relation_id = %d AND member_role = '%s' " \
 	"ORDER BY sequence_id ASC"
 #define GADM_DB_INSERT_POLYGONS "INSERT INTO osm2gadm_polygons(relation_id, name, iso2, max_x, min_x, max_y, min_y, geom) " \
-	"VALUES (%d, '%s', '%s', %e, %e, %e, %e, ST_GeomFromText('%s', 4326))"
+	"VALUES (%d, '%s', '%s', %f, %f, %f, %f, ST_GeomFromText('%s', 4326))"
 #define GADM_DB_INSERT_LINES "INSERT INTO osm2gadm_lines(relation_id, type, geom) " \
 	"VALUES (%d, '%s', ST_GeomFromText('%s', 4326))"
+#define GADM_DB_LOAD_WATER_POLYGONS "SELECT ST_AsText(p.geom) AS geom " \
+        "FROM osm2gadm_water_polygons_envelope e " \
+        "JOIN water_polygons p ON e.gid = p.gid " \
+        "WHERE ((e.max_x < %f AND e.max_x > %f) OR (e.min_x < %f AND e.min_x > %f)) " \
+        "  AND ((e.max_y < %f AND e.max_y > %f) OR (e.min_y < %f AND e.min_y > %f)) "
+#define GADM_DB_LOAD_WATER_POLYGONS_1 "SELECT ST_AsText(geom) AS geom " \
+        "FROM water_polygons p " \
+        "WHERE ST_Intersects (geom, ST_GeomFromText ('%s', 4326))"
 #define GADM_WGS_84_SRID 4326
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -40,8 +50,9 @@ extern "C"
 				       const char *type);
   void database_save_country_polygons (country_type country,
 				       GPtrArray * polygons);
-  void database_create_tables (void);
-
+  void database_tables_create (void);
+  void database_tables_truncate (void);
+  GPtrArray *database_get_water_polygons (GEOSGeometry * polygon);
 #ifdef __cplusplus
 }
 #endif

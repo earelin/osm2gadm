@@ -71,24 +71,31 @@ process_lines_validation (GPtrArray * lines)
 	  printf ("%s\n", GEOSGeomType (line));
 	}
 
-/*
-          int collection_size = GEOSGetNumGeometries(line);
-          for (int j = 0; j < collection_size; j++)
-            {
-                GEOSGeometry *splitted_line = GEOSGetGeometryN(line, i);
-                g_ptr_array_add (processed, splitted_line);
-            }
-          GEOSGeom_destroy (line);
-*/
       else
 	{
 	  if (geom_type == GEOS_MULTILINESTRING)
 	    {
+	      int collection_size = GEOSGetNumGeometries (line);
+	      GPtrArray *collection_lines =
+		g_ptr_array_sized_new (collection_size);
+	      for (int j = 0; j < collection_size; j++)
+		{
+		  GEOSGeometry *line_item =
+		    GEOSGeom_clone (GEOSGetGeometryN (line, j));
+		  g_ptr_array_add (collection_lines, line_item);
+		}
 
+	      collection_lines = process_lines_validation (collection_lines);
+
+	      for (int j = 0; j < collection_lines->len; j++)
+		{
+		  g_ptr_array_add (processed,
+				   g_ptr_array_index (collection_lines, j));
+		}
+	      GEOSGeom_destroy (line);
 	    }
 	  else
 	    g_ptr_array_add (processed, line);
-
 	}
     }
 
@@ -106,6 +113,7 @@ process_polygons_validation (GPtrArray * polygons)
       GEOSGeometry *polygon = g_ptr_array_index (polygons, i);
 
       int geom_type = GEOSGeomTypeId (polygon);
+
       if (geom_type == GEOS_POLYGON)
 	{
 	  g_ptr_array_add (processed, polygon);
@@ -189,12 +197,12 @@ process_polygons_merge (GPtrArray * outer_polygons,
 }
 
 void
-process_polygon_get_bounds (GEOSGeometry * polygon, int *max_x, int *min_x,
-			    int *max_y, int *min_y)
+process_polygon_get_bounds (GEOSGeometry * polygon, double *max_x,
+			    double *min_x, double *max_y, double *min_y)
 {
   GEOSSetSRID (polygon, GADM_WGS_84_SRID);
   GEOSGeometry *envelope = GEOSEnvelope (polygon);
-  GEOSCoordSequence *envelope_seq =
+  const GEOSCoordSequence *envelope_seq =
     GEOSGeom_getCoordSeq (GEOSGetExteriorRing (envelope));
 
   GEOSCoordSeq_getX (envelope_seq, 0, min_x);
@@ -225,7 +233,7 @@ process_line_close (GEOSGeometry * line)
     }
 
   unsigned int line_seq_size;
-  GEOSCoordSequence *line_seq = GEOSGeom_getCoordSeq (line);
+  const GEOSCoordSequence *line_seq = GEOSGeom_getCoordSeq (line);
   GEOSCoordSeq_getSize (line_seq, &line_seq_size);
   GEOSCoordSequence *closed_seq = GEOSCoordSeq_create (line_seq_size + 1, 2);
 
@@ -243,10 +251,10 @@ process_line_close (GEOSGeometry * line)
 
   closed_line = GEOSGeom_createLineString (closed_seq);
 
-  GEOSCoordSeq_destroy (line_seq);
   GEOSCoordSeq_destroy (closed_seq);
   GEOSGeom_destroy (start_point);
   GEOSGeom_destroy (end_point);
+  GEOSGeom_destroy (line);
 
   return closed_line;
 }
@@ -256,12 +264,12 @@ process_polygons_cut_coastile (GPtrArray * polygons)
 {
   GPtrArray *cutted_polygons = g_ptr_array_sized_new (polygons->len);
 
+/*
   for (int i = 0; i < polygons->len; i++)
     {
       GEOSGeometry *polygon = g_ptr_array_index (polygons, i);
       GEOSSetSRID (polygon, GADM_WGS_84_SRID);
       GPtrArray *water_polygons = database_get_water_polygons (polygon);
-      //water_polygons = process_polygons_validation (water_polygons);
 
       for (int j = 0; j < water_polygons->len; j++)
 	{
@@ -277,6 +285,7 @@ process_polygons_cut_coastile (GPtrArray * polygons)
 
   g_ptr_array_free (polygons, TRUE);
   cutted_polygons = process_polygons_validation (cutted_polygons);
+*/
 
   return cutted_polygons;
 }

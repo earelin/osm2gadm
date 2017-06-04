@@ -271,6 +271,7 @@ process_polygons_cut_coastile (GPtrArray * polygons)
 	  polygon = tmp;
 	}
 
+      utils_geom_array_free (water_polygons);
       g_ptr_array_add (cutted_polygons, polygon);
     }
 

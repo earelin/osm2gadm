@@ -38,7 +38,7 @@ database_get_water_polygons (GEOSGeometry * polygon)
 {
   char *wkt_geom = GEOSGeomToWKT (polygon);
   char *sql =
-    g_strdup_printf (GADM_DB_LOAD_WATER_POLYGONS_1, wkt_geom);
+    g_strdup_printf (GADM_DB_LOAD_WATER_POLYGONS, wkt_geom);
   PGresult *result = PQexec (dbconn, sql);
   int result_count = PQntuples (result);
 
